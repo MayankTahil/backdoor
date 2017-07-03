@@ -37,13 +37,17 @@ Put your own private and public keys for both users that you can ssh into.
 Run the following commands: 
 
 `cd ./backdoor/keys/admin`
+
 `rm -rf ./*` 
+
 [`ssh-keygen -t rsa -b 4096 -C "admin@domain.lab"`](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/)
 
 and do the same for the other user:
 
 `cd ./backdoor/keys/user`
+
 `rm -rf ./*`
+
 [`ssh-keygen -t rsa -b 4096 -C "user@domain.lab"`](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/)
 
 > **NOTE:** Save these keys, particularly the private keys in a safe location! You will require these keys to SSH into the backdoor container.
@@ -53,6 +57,7 @@ and do the same for the other user:
 Build your docker image by executing the following command: 
 
 `cd ./backdoor`
+
 `docker build -t backdoor .`
 
 # Usage
