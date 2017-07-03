@@ -1,0 +1,28 @@
+version: '2'
+services:
+  Backdoor-Base:
+    privileged: true
+    image: mayankt/backdoor:dind
+    stdin_open: true
+    volumes:
+    - /ssh-data:/data
+    dns:
+    - 172.16.10.2
+    tty: true
+    secrets:
+    - gid: '0'
+      mode: '444'
+      name: id_rsa.pub
+      secretId: 2
+      uid: '0'
+    labels:
+      io.rancher.container.pull_image: always
+      purpose: backdoor-base-image
+  Backdoor-Proxy:
+    image: rancher/lb-service-haproxy:v0.7.5
+    ports:
+    - 222:222/tcp
+    labels:
+      io.rancher.scheduler.affinity:host_label: host_type=infra
+      io.rancher.container.agent.role: environmentAdmin
+      io.rancher.container.create_agent: 'true'
