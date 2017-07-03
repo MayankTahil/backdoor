@@ -19,6 +19,42 @@ This container serves as a sandbox for backdoor access via SSH. This container c
 
 > **NOTE:** This container monitors when user(s) log onto the container. When a user logs in for the first time, it is noted and when no other user(s) are logged in after initial session, the container exits. A new container can the be run for a fresh environment when deployed though container orchrstration. This allows for a clean sanbox environment each time. Employ the equviliant of "force pull" with your orchestrator to get updated version of your sandbox image upon each run.
 
+# Build
+
+You can pull this contianer from dockerhub (not reocmended because it comes pre-seeded with SSH keys in this public repo) for quick testing or you can build the image yourself with your own private and public keys for user **admin** and **user**. 
+
+To buid your backdoor container, execute the following steps. It is assumed each step begins at the parent directory where you cloned this repository. 
+
+## Step 1: 
+
+Clone this repository to your local host:
+`git clone https://github.com/MayankTahil/backdoor.git`
+
+## Step 2: 
+
+Put your own private and public keys for both users that you can ssh into. 
+
+Run the following commands: 
+
+`cd ./backdoor/keys/admin`
+`rm -rf ./*` 
+[`ssh-keygen -t rsa -b 4096 -C "admin@domain.lab"`](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/)
+
+and do the same for the other user:
+
+`cd ./backdoor/keys/user`
+`rm -rf ./*`
+[`ssh-keygen -t rsa -b 4096 -C "user@domain.lab"`](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/)
+
+> **NOTE:** Save these keys, particularly the private keys in a safe location! You will require these keys to SSH into the backdoor container.
+
+## Step 3: 
+
+Build your docker image by executing the following command: 
+
+`cd ./backdoor`
+`docker build -t backdoor .`
+
 # Usage
 
 Run the following command to start the container in a standalone dockerhost.
@@ -32,6 +68,8 @@ docker run -dt \
 -v config:~/.kube/config:r0 \
 mayankt/backdoor:dind
 ```
+
+> Replace `mayankt/backdoor:dind` with `backdoor` if you built your own image following the steps above.
 
 ## Breakdown
 
@@ -52,6 +90,12 @@ mayankt/backdoor:dind
 Run this command within this git directory to SSH into the deployed container: 
 
 `ssh -p 222 -i /keys/admin/id_rsa admin@localhost`
+
+* **admin** user is part of sudoers and can run commands like "sudo docker..."
+
+or 
+
+`ssh -p 222 -i /keys/user/id_rsa user@localhost`
 
 > It can be handy when running these containers to mount a volume locally on the container at `/data` to a NFS or network share mounted on the underlying host. This will allow for storing persistence data.
 
