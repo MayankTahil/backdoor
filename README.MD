@@ -1,6 +1,8 @@
 # Overview 
 
-This container serves as a sandbox for backdoor access via SSH. This container can give you a CLI prompt on demand in a clean alpine linux base environment with the following packaged pre-installed : 
+This container serves as a sandbox for backdoor access via SSH. This container can give you a CLI prompt on demand in a clean [dind](https://hub.docker.com/_/docker/) base environment with the following packaged pre-installed: 
+
+>Within this container, end users can run docker containers for testing and isolated on demand development. There are also utilities built in to manage kubernetes clusters as well.
 
 * [docker](https://hub.docker.com/_/docker/) (runs within the backdoor docker container itself)
 * sudo
@@ -16,12 +18,13 @@ This container serves as a sandbox for backdoor access via SSH. This container c
 * tcpdump
 * nslookup 
 * telnet
+* kubectl
 
-> **NOTE:** This container monitors when user(s) log onto the container. When a user logs in for the first time, it is noted and when no other user(s) are logged in after initial session, the container exits. A new container can the be run for a fresh environment when deployed though container orchrstration. This allows for a clean sanbox environment each time. Employ the equviliant of "force pull" with your orchestrator to get updated version of your sandbox image upon each run.
+> **NOTE:** This container is ideally supposed to monitor when user(s) log onto the container. This feature will soon be re-implemented soon in the next release. Ideally, when a user logs in for the first time, it is noted by a daemon service and when no other user(s) are logged in after initial session, the container exits. A new container can the be run for a fresh environment when deployed though container orchrstration. This allows for a clean sandbox environment each time. Employ the equviliant of "force pull" with your orchestrator to get updated version of your sandbox image upon each run.
 
 # Build
 
-You can pull this contianer from dockerhub (not reocmended because it comes pre-seeded with SSH keys in this public repo) for quick testing or you can build the image yourself with your own private and public keys for user **admin** and **user**. 
+You can pull this contianer from dockerhub (not reocmended because it comes pre-seeded with SSH keys found in this public repo for user `admin` and `user`) for quick testing or you can build the image yourself with your own private and public keys for user `admin` and `user`. 
 
 To buid your backdoor container, execute the following steps. It is assumed each step begins at the parent directory where you cloned this repository. 
 
@@ -58,7 +61,7 @@ Build your docker image by executing the following command:
 
 `cd ./backdoor`
 
-`docker build -t backdoor .`
+`docker build -t mayankt/backdoor .`
 
 # Usage
 
@@ -70,11 +73,9 @@ docker run -dt \
 --name=backdoor  \
 -p 222:22 \
 -v /var/storage:/data:rw \
--v config:~/.kube/config:r0 \
-mayankt/backdoor:dind
+-v Local/.kube/config:/kube/config:ro \
+mayankt/backdoor:stable
 ```
-
-> Replace `mayankt/backdoor:dind` with `backdoor` if you built your own image following the steps above.
 
 ## Breakdown
 
@@ -84,11 +85,11 @@ mayankt/backdoor:dind
 
 `-p 222:22` This flag maps the host port 222 to port 22 ont he container so one can SSH into the container from outside of the docker network. 
 
-`-v /var/storage:/data:rw` This flag is a volume mount to denote the directory on the host at `/var/storage` is mapped to the directory in thec ontainer at `/data` so the contianer can access these files (`rw`) for persistent storage. 
-  * This is an optional flag if you would perfer persistent storage on the host through the container. Without this flag the data is ephemeral and lost when the container is terminated. 
+`-v /var/storage:/data:rw` **Optional** This flag is a volume mount to denote the directory on the host at `/var/storage` is mapped to the directory in the container at `/data` so the container can access these files (`rw`) for persistent storage. 
+  * This is an optional flag if you would prefer persistent storage on the host through the container. Without this flag the data is ephemeral and lost when the container is terminated. 
 
-`-v /kube/config:/home/admin/.kube/config:ro` This flag denotes a file map of the file `/kube/config` on the local host to the file `/home/admin/.kube/config` on the container. This map allows for read only access (`ro`) to the kube config file to manage a kubernetes cluster.
-  * This is an optional flag if you would not like to import a kube config file on the host into the container.
+`-v Local/.kube/config:/kube/config:ro` **Optional** This flag denotes a file map of kubectl's config file `/Local/.kube/config` on the local host to the file `/kube/config` on the container. This map allows for read only access (`ro`) to the kube config file to manage a kubernetes cluster by any user logged into the container.
+  * This is an optional flag if you would not like to import a kube config file into the container to manage a kubernetes cluster. 
 
 # SSH Access
 
@@ -96,13 +97,14 @@ Run this command within this git directory to SSH into the deployed container:
 
 `ssh -p 222 -i /keys/admin/id_rsa admin@localhost`
 
-* **admin** user is part of sudoers and can run commands like "sudo docker..."
+* **admin** user is part of sudoers and root therfore can run commands like "docker..."
 
 or 
 
 `ssh -p 222 -i /keys/user/id_rsa user@localhost`
 
-> It can be handy when running these containers to mount a volume locally on the container at `/data` to a NFS or network share mounted on the underlying host. This will allow for storing persistence data.
+* **user** user is guest user with limited privileges and it cannot run commands like "docker..."
+
 
 # Rancher Stack 
 
