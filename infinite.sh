@@ -1,13 +1,14 @@
+!#/bin/sh
 # Start sshd in the background
-/usr/sbin/sshd -D &
+/usr/sbin/sshd -D &>/dev/null &
 # Start docker service for docker-in-docker
-/usr/local/bin/dockerd-entrypoint.sh &
+/usr/local/bin/dockerd-entrypoint.sh &>/dev/null &
 
-# Logic to drive while loop which constantly checks if user/s are logged in or not. 
+## Logic to drive while loop which constantly checks if user/s are logged in or not. 
 SWCH=true
 LOGGED=false
 
-# Logic to check if and when someone logs into the container via SSH
+## Logic to check if and when someone logs into the container via SSH
 while [ "$SWCH" = "true" ]; do
         sleep 5
         # How many people are logged in?
