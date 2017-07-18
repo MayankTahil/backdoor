@@ -17,10 +17,11 @@ RUN apk add --no-cache \
  # Generate host keys for sshd
  /usr/bin/ssh-keygen -A
 
-# Install kubctl in the container
+# Install kubctl in the container and set default config file in /kube directory
 WORKDIR /usr/local/bin
 RUN  curl -O https://storage.googleapis.com/kubernetes-release/release/v1.7.1/bin/linux/amd64/kubectl && \
- chmod +x kubectl && mkdir /kube
+ chmod +x kubectl && mkdir /kube && \
+ echo 'export KUBECONFIG=/kube/config' >> /etc/profile
 
 # Set container to be a SSH host with pre-seeded SSH keys from git project and prohibit root logon.
 RUN mkdir /var/run/sshd && mkdir /data && mkdir /keys && \
@@ -42,6 +43,7 @@ RUN adduser -s /bin/bash -D user && \
 
 # Add unlocked user "admin" (sudo) and no ssh keys are retained.
 RUN adduser -s /bin/bash -D admin && \
+ adduser admin root && \
  echo "admin            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers && \
  mkdir /home/admin/.ssh && \
  touch /home/admin/.ssh/authorized_keys && \
@@ -54,8 +56,5 @@ COPY ./infinite.sh /tmp/infinite.sh
 
 WORKDIR /data
 
-ENV KUBERNETES_CONFIG "/kube/config"
-
 EXPOSE 22
-CMD sudo /tmp/infinite.sh
-
+CMD /tmp/infinite.sh
